@@ -1,129 +1,51 @@
 {
-  "name": "DMA-CP-ABE-V2X",
-  "type": "CP-ABE",
-  "variant": "decentralized-multi-authority",
-  "security": "selective",
-  "assumption": "SXDH",
-  "curve": "BLS12-381",
-
-  "predicate": {
-    "x": {
-      "description": "Access policy as LSSS matrix (A, rho)",
-      "type": "lsss",
-      "matrix": "A",
-      "row_map": "rho",
-      "row_map_range": "(att, authority)",
-      "target_vector": "e_1"
-    },
-    "y": {
-      "description": "Vehicle attribute set per authority, bound to GID",
-      "type": "set",
-      "structure": {
-        "GID": "string",
-        "S_theta": "map from authority index to attribute subset"
-      }
-    },
-    "satisfaction": "exists I subset [n], {omega_j} s.t. sum_{j in I} omega_j * A_j = e_1"
+  "meta": {
+    "name": "DMA-CP-ABE-V2X",
+    "type": "CP-ABE",
+    "variant": "decentralized-multi-authority",
+    "security": "selective",
+    "assumption": "SXDH",
+    "curve": "BLS12-381",
+    "description": "Decentralized multi-authority CP-ABE for V2X communication"
   },
+  "spec": {
 
-  "variables": {
-    "master_secret": {
-      "alpha": {
-        "indexed_by": "theta",
-        "range": "authorities",
-        "group": "Zp"
-      }
-    },
-    "common": {
-      "b_att": {
-        "indexed_by": "att",
-        "range": "attribute_universe",
-        "group": "G2"
-      },
-      "b_GID": {
-        "type": "fdh",
-        "input": "GID",
-        "group": "G2"
-      }
-    },
-    "key_randomness": {
-      "r": {
-        "indexed_by": "j",
-        "range": "rows_of_A",
-        "group": "Zp"
-      }
-    },
-    "ciphertext_randomness": {
-      "s": {
-        "group": "Zp"
-      },
-      "lambda": {
-        "indexed_by": "j",
-        "range": "rows_of_A",
-        "group": "Zp"
-      }
-    }
-  },
-
-  "encodings": {
-    "key": {
-      "indexed_by": ["j", "theta"],
-      "index_constraint": "authority(rho(j)) == theta",
-      "K1": {
-        "expr": "\\alpha_{\\theta} + r_j \\cdot b_{att_j} + r_j \\cdot b_{GID}",
-        "group": "G2"
-      },
-      "K2": {
-        "expr": "r_j",
-        "group": "G2"
-      }
-    },
-    "ciphertext": {
-      "C0": {
-        "expr": "s",
-        "group": "G1",
-        "indexed": false
-      },
-      "C1": {
-        "expr": "\\lambda_j + s \\cdot b_{att_j}",
-        "group": "G1",
-        "indexed_by": "j"
-      },
-      "C2": {
-        "expr": "s",
-        "group": "G1",
-        "indexed_by": "j"
-      },
-      "C3": {
-        "expr": "s \\cdot b_{GID}",
-        "group": "G1",
-        "indexed": false
-      }
-    }
-  },
-
-  "pairing": {
-    "terms": [
-      {
-        "key_poly": "K1_j",
-        "ct_poly":  "C2_j",
-        "coeff":    "omega_j",
-        "sign":     "+"
-      },
-      {
-        "key_poly": "K2_j",
-        "ct_poly":  "C1_j",
-        "coeff":    "omega_j",
-        "sign":     "-"
-      },
-      {
-        "key_poly": "K2_j",
-        "ct_poly":  "C3",
-        "coeff":    "omega_j",
-        "sign":     "-"
-      }
+    "master_key_vars": [
+      "alpha_{l}_[l:AUTHS]"
     ],
-    "result": "s \\cdot \\sum_{\\theta} \\alpha_{\\theta}",
-    "target_group": "GT"
+
+    "common_vars": [
+      "b_{l}_[l:AUTHS]",
+      "b'_{l}_[l:AUTHS]",
+      "b_{1, att}_[att:ATTR_UNI]"
+    ],
+
+    "key_polys": [
+      "(k_{1, l} : H = alpha_{l} + <rgid>*b_{l} + r_{l}*b'_{l})_[l:attr_to_auth(USER_ATTRS)]",
+      "(k_{2, att} : G = r_{att.auth}*b_{1, att})_[att:USER_ATTRS]"
+    ],
+
+    "cipher_polys": [
+      "cm : Gt = <secret>",
+      "(c_{1, j} : G = <mu>_{j} + s_{1, j}*b_{j.auth})_[j:LSSS_ROWS]",
+      "(c_{2, j} : G = s_{1, j}*b'_{j.auth} + s_{2, j.dedup}*b_{1, j.attr})_[j:LSSS_ROWS]",
+      "(c'_{j} : Gt = <lambda>_{j} + alpha_{j.auth}*s_{1, j})_[j:LSSS_ROWS]"
+    ],
+
+    "e_vec": [
+      "(c'_{j} = <epsilon>_{j})_[j:LIN_COMB]"
+    ],
+
+    "e_mat": [
+      "(s_{2, j.dedup} ~ k_{2, j.attr} = -<epsilon>_{j})_[j:LIN_COMB]",
+      "(s_{1, j} ~ k_{1, j.auth} = -<epsilon>_{j})_[j:LIN_COMB]",
+      "(c_{1, j} ~ <rgid> = <epsilon>_{j})_[j:LIN_COMB]",
+      "(c_{2, j} ~ r_{j.auth} = <epsilon>_{j})_[j:LIN_COMB]"
+    ],
+
+    "fdh_map": [
+      "b_{1, a}_[a:ATTR_UNI] # 1"
+    ]
+
   }
 }
