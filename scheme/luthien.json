@@ -1,12 +1,14 @@
 {
   "meta": {
-    "name": "DMA-CP-ABE-V2X",
-    "type": "CP-ABE",
-    "variant": "decentralized-multi-authority",
-    "security": "selective",
-    "assumption": "SXDH",
-    "curve": "BLS12-381",
-    "description": "Decentralized multi-authority CP-ABE for V2X communication"
+    "name": "DMA-CP-ABE-V2X-FABEO",
+    "description": "Decentralized multi-authority CP-ABE for V2X, FABEO-optimized",
+    "security": {
+      "base":       "(1,1) symbolic security",
+      "final":      "adaptive in Generic Group Model",
+      "assumption": "GGM + SXDH",
+      "tightness":  "optimal"
+    },
+    "curve": "BLS12-381"
   },
   "spec": {
 
@@ -16,20 +18,19 @@
 
     "common_vars": [
       "b_{l}_[l:AUTHS]",
-      "b'_{l}_[l:AUTHS]",
       "b_{1, att}_[att:ATTR_UNI]"
     ],
 
     "key_polys": [
-      "(k_{1, l} : H = alpha_{l} + <rgid>*b_{l} + r_{l}*b'_{l})_[l:attr_to_auth(USER_ATTRS)]",
-      "(k_{2, att} : G = r_{att.auth}*b_{1, att})_[att:USER_ATTRS]"
+      "(k_{1, l} : G = alpha_{l} + <rgid>*b_{l} + r_{l}*b_{1, l})_[l:attr_to_auth(USER_ATTRS)]",
+      "(k_{2, att} : H = r_{att.auth}*b_{1, att})_[att:USER_ATTRS]"
     ],
 
     "cipher_polys": [
       "cm : Gt = <secret>",
-      "(c_{1, j} : G = <mu>_{j} + s_{1, j}*b_{j.auth})_[j:LSSS_ROWS]",
-      "(c_{2, j} : G = s_{1, j}*b'_{j.auth} + s_{2, j.dedup}*b_{1, j.attr})_[j:LSSS_ROWS]",
-      "(c'_{j} : Gt = <lambda>_{j} + alpha_{j.auth}*s_{1, j})_[j:LSSS_ROWS]"
+      "(c_{1, j} : G = <mu>_{j} + s_{1, j.auth}*b_{j.auth})_[j:LSSS_ROWS]",
+      "(c_{2, j} : G = s_{1, j.auth}*b_{1, j.attr})_[j:LSSS_ROWS]",
+      "(c'_{j} : H = <lambda>_{j} + alpha_{j.auth}*s_{1, j.auth})_[j:LSSS_ROWS]"
     ],
 
     "e_vec": [
@@ -37,14 +38,14 @@
     ],
 
     "e_mat": [
-      "(s_{2, j.dedup} ~ k_{2, j.attr} = -<epsilon>_{j})_[j:LIN_COMB]",
-      "(s_{1, j} ~ k_{1, j.auth} = -<epsilon>_{j})_[j:LIN_COMB]",
-      "(c_{1, j} ~ <rgid> = <epsilon>_{j})_[j:LIN_COMB]",
-      "(c_{2, j} ~ r_{j.auth} = <epsilon>_{j})_[j:LIN_COMB]"
+      "(c_{2, j} ~ k_{2, j.attr} = -<epsilon>_{j})_[j:LIN_COMB]",
+      "(s_{1, j.auth} ~ k_{1, j.auth} = -<epsilon>_{j})_[j:LIN_COMB]",
+      "(c_{1, j} ~ <rgid> = <epsilon>_{j})_[j:LIN_COMB]"
     ],
 
     "fdh_map": [
-      "b_{1, a}_[a:ATTR_UNI] # 1"
+      "b_{1, a}_[a:ATTR_UNI] # 1",
+      "b_{1, l}_[l:AUTHS] # 2"
     ]
 
   }
